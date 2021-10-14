@@ -22,8 +22,12 @@ struct pos wasd(struct pos p, char c) {
 }
 
 char keyboard_input() {
+#if 0
+	ai_input(&world, head, tail, food);
+#else
 	if (_kbhit())
 		return _getch();
+#endif
 }
 
 int is_input_legal(char c) {
@@ -46,24 +50,16 @@ void generate_food() {
 	world[x][y] = 'f';
 }
 
-int move(int* snake_len, int *step) {
-	if (facing == 0)
-		return 0;
-
+int move(int* snake_len, int* step) {
 	struct pos test_head = head;
 	test_head = wasd(test_head, facing);
 
 	if (test_head.x < 0 || test_head.x >= W || test_head.y < 0 || test_head.y >= H)
 		return 1;
-	char f = world[test_head.x][test_head.y];
-	if (f == 'w' || f == 'a' || f == 's' || f == 'd')
-		return 2;
 
 	world[head.x][head.y] = facing;
-	head = test_head;
-	(*step)++;
 
-	if (world[test_head.x][test_head.y] == 0) {
+	if (world[test_head.x][test_head.y] != 'f') {
 		struct pos tmp = tail;
 		tail = wasd(tail, world[tail.x][tail.y]);
 		world[tmp.x][tmp.y] = 0;
@@ -73,7 +69,15 @@ int move(int* snake_len, int *step) {
 		(*snake_len)++;
 	}
 
+	char f = world[test_head.x][test_head.y];
+	if (f == 'w' || f == 'a' || f == 's' || f == 'd')
+		return 2;
+
+	head = test_head;
 	world[head.x][head.y] = 'h';
+
+	(*step)++;
+
 	return 0;
 }
 
@@ -112,7 +116,7 @@ int main(void) {
 	int snake_len = 1;
 	srand(time(NULL));
 	generate_food();
-	while(dead == 0){
+	while (dead == 0) {
 		input();
 		dead = move(&snake_len, &step);
 		draw();
