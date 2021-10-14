@@ -12,7 +12,7 @@ struct pos {
 	int y;
 };
 
-void gotoxy(int, int);
+void gotoxy(COORD);
 struct pos wasd(struct pos, char);
 char keyboard_input();
 char ai_input();

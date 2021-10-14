@@ -6,8 +6,13 @@ struct pos food;
 char facing = 0;
 char world[W][H] = { 0 };
 
-void gotoxy(int x, int y) {
-	COORD pos = { x, y };
+COORD getxy() {
+	CONSOLE_SCREEN_BUFFER_INFO bInfo;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &bInfo);
+	return bInfo.dwCursorPosition;
+}
+
+void gotoxy(COORD pos) {
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
 
@@ -81,7 +86,7 @@ int move(int* snake_len, int* step) {
 	return 0;
 }
 
-void draw() {
+void draw(COORD pos) {
 	char output[2 * (W + 2) * (H + 2)] = { 0 };
 	int n = 0;
 	for (int y = 0; y < H + 2; y++) {
@@ -92,8 +97,8 @@ void draw() {
 				case'w':
 				case'a':
 				case's':
-				case'd':
-				case'h': output[n++] = 'o'; break;
+				case'd': output[n++] = 'o'; break;
+				case'h': output[n++] = 'e'; break;
 				default: output[n++] = ' '; break;
 				}
 			}
@@ -105,12 +110,12 @@ void draw() {
 		output[n - 1] = '\n';
 	}
 	output[n - 1] = '\0';
-	output[(head.y + 1) * (2 * (W + 2)) + 2 * (head.x + 1)] = 'e';
-	gotoxy(0, 0);
+	gotoxy(pos);
 	puts(output);
 }
 
 int main(void) {
+	COORD screen_pos = getxy();
 	int dead = 0;
 	int step = 0;
 	int snake_len = 1;
@@ -119,7 +124,7 @@ int main(void) {
 	while (dead == 0) {
 		input();
 		dead = move(&snake_len, &step);
-		draw();
+		draw(screen_pos);
 		Sleep(200);
 	}
 	printf("your length is %d, your step is %d.\n", snake_len, step);
