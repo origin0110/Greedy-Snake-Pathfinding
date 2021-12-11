@@ -14,12 +14,6 @@ struct pos {
 	int y;
 };
 
-void gotoxy(COORD);
-struct pos wasd(struct pos, char);
-char keyboard_input();
-char ai_input();
+char ai_input(char world[W][H], struct pos, struct pos, struct pos);
+
 int is_input_legal(char);
-void input();
-void generate_food();
-int move(int*, int*);
-void draw();

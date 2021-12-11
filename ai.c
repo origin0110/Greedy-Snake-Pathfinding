@@ -6,16 +6,22 @@ struct block {
 	char father_block;
 };
 
-char ai_input(char** world, struct pos head, struct pos tail, struct pos food) {
-	//复刻世界
+char ai_input(char world[W][H], struct pos head, struct pos tail, struct pos food) {
 	struct block ai_world[W][H];
 	for (int x = 0; x < W; x++)
 		for (int y = 0; y < H; y++) {
-			struct block tmp = { 0,world[x][y],0 };
+			struct block tmp = { 0, world[x][y], 0 };
 			ai_world[x][y] = tmp;
 		}
 
-	//搜索食物
+	//Artificial Idiot
+	//人工智障
+	switch (rand() % 4) {
+	case 0:return 'w';
+	case 1:return 'a';
+	case 2:return 's';
+	case 3:return 'd';
+	}
 
-	return 0; //人工智障
+	return 0;
 }
