@@ -1,4 +1,16 @@
-#include "snake.h"
+#include <conio.h>
+#include <windows.h>
+#include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#define H 16
+#define W 16
+
+struct pos {
+	int x;
+	int y;
+};
 
 //'f' food
 //'h' head
@@ -20,30 +32,20 @@ void gotoxy(COORD pos) {
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
 
-struct pos wasd(struct pos p, char c) {
+struct pos wsad(struct pos p, char c) {
 	switch (c) {
-		case'w': p.y--; break;
-		case'a': p.x--; break;
-		case's': p.y++; break;
-		case'd': p.x++; break;
+	case'w': p.y--; break;
+	case'a': p.x--; break;
+	case's': p.y++; break;
+	case'd': p.x++; break;
 	}
 	return p;
 }
 
-char input() {
-	static char tmp = 0;
-	if (_kbhit())
-		tmp = _getch();
-	if (tmp == 'p')
-		return ai_input(world, head, tail, food);
-	else
-		return tmp;
-}
-
 int is_input_legal(char c) {
 	struct pos tmp;
-	tmp = wasd(head, c);
-	tmp = wasd(tmp, world[tmp.x][tmp.y]);
+	tmp = wsad(head, c);
+	tmp = wsad(tmp, world[tmp.x][tmp.y]);
 	return tmp.x != head.x || tmp.y != head.y;
 }
 
@@ -56,39 +58,80 @@ void generate_food() {
 	world[x][y] = 'f';
 }
 
+int out_of_wall(struct pos p) {
+	return p.x < 0 || p.x >= W || p.y < 0 || p.y >= H;
+}
+
+int is_body(char c) {
+	return c == 'w' || c == 'a' || c == 's' || c == 'd';
+}
+
+int no_space(len) {
+	return len >= W * H;
+}
+
+void queue_i(struct pos queue[W * H], int* p1, int x, int y) {
+	queue[*p1].x = x;
+	queue[*p1].y = y;
+	(*p1) = (*p1) + 1 > W * H ? 0 : (*p1) + 1;
+}
+
+struct pos queue_o(struct pos queue[W * H], int* p0) {
+	struct pos out_pos = { 0,0 };
+	out_pos.x = queue[*p0].x;
+	out_pos.x = queue[*p0].y;
+	(*p0) = (*p0) + 1 > W * H ? 0 : (*p0) + 1;
+	return out_pos;
+}
+
+void get_choice(char choice[2]) {
+	choice[0] = head.y & 1 ? 'a' : 'd';
+	choice[1] = head.x & 1 ? 's' : 'w';
+}
+
+//Artificial Idiot
+char ai_input(char world[W][H], struct pos head, struct pos tail, struct pos food) {
+	int r = rand() & 1;
+	char choice[2];
+	get_choice(choice);
+	struct pos next = wsad(head, choice[r]);
+	int will_dead = out_of_wall(next) || is_body(world[next.x][next.y]);
+	return choice[will_dead ^ r];
+}
+
+char input() {
+	static char tmp = 0;
+	Sleep((tmp == 'p') ? 0 : 100);
+	if (_kbhit())
+		tmp = _getch();
+	return (tmp == 'p') ? ai_input(world, head, tail, food) : tmp;
+
+}
+
 int move(int* snake_len, int* step) {
 	static char facing = 0;
-
 	char c = input();
 	facing = is_input_legal(c) ? c : facing;
-
 	struct pos test_head = head;
-	test_head = wasd(test_head, facing);
-
-	if (test_head.x < 0 || test_head.x >= W || test_head.y < 0 || test_head.y >= H)
+	test_head = wsad(test_head, facing);
+	if (out_of_wall(test_head))
 		return 1;
-
 	world[head.x][head.y] = facing;
-
 	if (world[test_head.x][test_head.y] != 'f') {
 		struct pos tmp = tail;
-		tail = wasd(tail, world[tail.x][tail.y]);
+		tail = wsad(tail, world[tail.x][tail.y]);
 		world[tmp.x][tmp.y] = 0;
 	}
 	else {
+		if (no_space(++(*snake_len)))
+			return -1;
 		generate_food();
-		(*snake_len)++;
 	}
-
-	char f = world[test_head.x][test_head.y];
-	if (f == 'w' || f == 'a' || f == 's' || f == 'd')
+	if (is_body(world[test_head.x][test_head.y]))
 		return 2;
-
 	head = test_head;
 	world[head.x][head.y] = 'h';
-
 	(*step)++;
-
 	return 0;
 }
 
@@ -99,13 +142,13 @@ void draw(COORD pos) {
 		for (int x = 0; x < W + 2; x++) {
 			if (x > 0 && x < W + 1 && y > 0 && y < H + 1) {
 				switch (world[x - 1][y - 1]) {
-					case'f': output[n++] = 'X'; break;
-					case'w':
-					case'a':
-					case's':
-					case'd': output[n++] = 'o'; break;
-					case'h': output[n++] = 'e'; break;
-					default: output[n++] = ' '; break;
+				case'f': output[n++] = 'X'; break;
+				case'w':
+				case'a':
+				case's':
+				case'd': output[n++] = 'o'; break;
+				case'h': output[n++] = 'e'; break;
+				default: output[n++] = ' '; break;
 				}
 			}
 			else
@@ -130,9 +173,7 @@ int main(void) {
 	while (dead == 0) {
 		dead = move(&snake_len, &step);
 		draw(screen_pos);
-		Sleep(200);
 	}
-	printf("your length is %d, your step is %d.\n", snake_len, step);
-	printf("dead code: %x\n", dead);
+	printf("your length is\t%d\nyour step is\t%d\n", snake_len, step);
 	return 0;
 }
