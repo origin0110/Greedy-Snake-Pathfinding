@@ -70,20 +70,6 @@ int no_space(len) {
 	return len >= W * H;
 }
 
-void queue_i(struct pos queue[W * H], int* p1, int x, int y) {
-	queue[*p1].x = x;
-	queue[*p1].y = y;
-	(*p1) = (*p1) + 1 > W * H ? 0 : (*p1) + 1;
-}
-
-struct pos queue_o(struct pos queue[W * H], int* p0) {
-	struct pos out_pos = { 0,0 };
-	out_pos.x = queue[*p0].x;
-	out_pos.x = queue[*p0].y;
-	(*p0) = (*p0) + 1 > W * H ? 0 : (*p0) + 1;
-	return out_pos;
-}
-
 void get_choice(char choice[2]) {
 	choice[0] = head.y & 1 ? 'a' : 'd';
 	choice[1] = head.x & 1 ? 's' : 'w';
@@ -105,7 +91,6 @@ char input() {
 	if (_kbhit())
 		tmp = _getch();
 	return (tmp == 'p') ? ai_input(world, head, tail, food) : tmp;
-
 }
 
 int move(int* snake_len, int* step) {
